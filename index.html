@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tap Tap Game</title>
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url('blockchain_hero_bg.png'); /* Replace 'background.jpg' with the path to your background image */
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+}
+
+.content {
+    background-image: url('blockchain_hero_bg.png'); /* Replace 'background.jpg' with the path to your background image */
+    background-size: cover;
+    background-repeat: no-repeat;
+    padding: 20px;
+    border-radius: 10px; /* If you want to add border-radius to the content */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    color: white;
+}
+
+#game-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#score {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+#tap-btn {
+    padding: 10px 20px;
+    font-size: 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+#boost-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #2ecc71;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#boost-timer {
+    display: none;
+}
+
+#daily-tasks {
+    text-align: left;
+}
+
+#daily-tasks h2 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+#daily-tasks ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#daily-tasks ul li {
+    color: white;
+    margin-bottom: 5px;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+}
+
+footer nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+footer nav ul li {
+    margin: 10px;
+}
+
+footer nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+/* Add this to your existing CSS */
+#tap-coin {
+    width: 100px; /* Adjust size as needed */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Center the image */
+    margin: 0 auto 10px; /* Add margin for spacing */
+    cursor: pointer;
+}
+
+#boost-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #2ecc71;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+/* For mobile devices (320px - 480px) */
+@media only screen and (min-width: 320px) and (max-width: 480px) {
+    .container {
+        max-width: 90%; /* Adjust as needed */
+    }
+
+    .content {
+        padding: 10px; /* Adjust as needed */
+    }
+
+    #game-container {
+        font-size: 16px; /* Adjust as needed */
+    }
+}
+
+/* For iPads and Tablets (481px - 768px) */
+@media only screen and (min-width: 481px) and (max-width: 768px) {
+    .container {
+        max-width: 80%; /* Adjust as needed */
+    }
+
+    .content {
+        padding: 15px; /* Adjust as needed */
+    }
+
+    #game-container {
+        font-size: 18px; /* Adjust as needed */
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div class="container" >
+        <h1>Tap Tap Game</h1>
+        <div class="content">
+            <div id="game-container">
+                <p id="score">Score: 0</p>
+                <img src="coin.png" alt="Coin" id="tap-coin">
+                <button id="boost-btn">Use Boost (3 left)</button>
+                <div id="boost-timer" class="progress-bar"></div>
+            </div>
+            <div id="daily-tasks">
+                <h2>Daily Tasks</h2>
+                <ul id="task-list">
+                    <li><a href="#">Tap 100 times in a day</a></li>
+                    <li><a href="#">Earn 500 points in a day</a></li>
+                    <li><a href="#">Subscribe to a channel</a></li>
+                    <li><a href="#">Follow on Instagram</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Leaderboard</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </nav>
+    </footer>
+    
+    <script>
+// Sample daily tasks
+const dailyTasks = [
+    { name: "Tap 100 times in a day", target: 100, reward: 50 },
+    { name: "Earn 500 points in a day", target: 500, reward: 100 },
+    { name: "Subscribe to a channel", completed: false, reward: 200 },
+    { name: "Follow on Instagram", completed: false, reward: 100 },
+    // Add more tasks as needed
+];
+
+let score = parseFloat(localStorage.getItem("score")) || 0;
+if (isNaN(score)) {
+    score = 0;
+}
+document.getElementById("score").textContent = "Score: " + score;
+
+let boostCount = parseInt(localStorage.getItem("boostCount")) || 3; // Initialize boost count
+if (isNaN(boostCount)) {
+    boostCount = 3;
+}
+updateBoostButtonText(); // Update boost button text initially
+
+// Function to display tasks
+function displayTasks() {
+    const taskList = document.getElementById("task-list");
+    taskList.innerHTML = "";
+
+    dailyTasks.forEach(task => {
+        const listItem = document.createElement("li");
+        listItem.textContent = task.name;
+        taskList.appendChild(listItem);
+    });
+}
+
+// Function to update task progress and reward points
+function updateTaskProgress() {
+    dailyTasks.forEach(task => {
+        if (!task.completed && isTaskCompleted(task)) {
+            task.completed = true;
+            score += task.reward;
+            localStorage.setItem("score", score);
+        }
+    });
+}
+
+// Function to check if a task is completed
+function isTaskCompleted(task) {
+    if (task.name === "Subscribe to a channel") {
+        return userIsSubscribedToChannel();
+    } else if (task.name === "Follow on Instagram") {
+        return userIsFollowingOnInstagram();
+    }
+}
+
+// Function to update boost button text based on remaining boosts
+function updateBoostButtonText() {
+    document.getElementById("boost-btn").textContent = `Use Boost (${boostCount} left)`;
+}
+
+// Event listener for tapping the coin
+document.getElementById("tap-coin").addEventListener("click", function() {
+    score++;
+    document.getElementById("score").textContent = "Score: " + score;
+    updateTaskProgress();
+});
+
+// Event listener for using boost
+document.getElementById("boost-btn").addEventListener("click", function() {
+    if (boostCount > 0) {
+        boostCount--;
+        localStorage.setItem("boostCount", boostCount);
+        updateBoostButtonText();
+        activateBoost(); // Activate boost
+    }
+});
+
+// Function to activate boost
+function activateBoost() {
+    const progressBar = document.getElementById("boost-timer");
+    progressBar.style.display = "block";
+    
+    let progressWidth = 0;
+    const interval = setInterval(() => {
+        progressWidth += 1; // Adjust this value for the desired speed of the progress bar
+        progressBar.style.width = `${progressWidth}%`;
+        if (progressWidth >= 100) {
+            clearInterval(interval);
+            deactivateBoost();
+        }
+    }, 150); // Adjust this value for the desired interval of the progress bar update
+}
+
+// Function to deactivate boost
+function deactivateBoost() {
+    const progressBar = document.getElementById("boost-timer");
+    progressBar.style.display = "none";
+}
+
+// Replace these functions with your actual logic to check if tasks are completed
+function userIsSubscribedToChannel() {
+    return true; // Replace with actual logic
+}
+
+function userIsFollowingOnInstagram() {
+    return true; // Replace with actual logic
+}
+
+// Display tasks
+displayTasks();
+
+    </script>
+</body>
+</html>
